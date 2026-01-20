@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Persistent memory integration for LangChain powered by Alchemyst AI"
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "Alchemyst", email = "saloni@getalchemyst.com" }]
+authors = [{ name = "Alchemyst", email = "anuran@getalchemystai.com" }]
 requires-python = ">=3.10"
 dependencies = [
   "requests>=2.31",
