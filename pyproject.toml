@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Alchemyst's LangChain-style Python utilities"
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "Alchemyst", email = "" }]
+authors = [{ name = "Alchemyst", email = "saloni@getalchemyst.com" }]
 requires-python = ">=3.10"
 dependencies = [
   "requests>=2.31",
