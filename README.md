@@ -4,6 +4,14 @@ Persistent memory for LangChain powered by Alchemyst AI.
 
 ---
 
+## Installation
+
+```bash
+pip install alchemyst-langchain
+```
+
+---
+
 ## Quick Start
 
 ```python
@@ -34,11 +42,11 @@ print(response['response'])  # "Alice"
 
 ## Features
 
-- **Persistent Memory** - Survives restarts
-- **LangChain Compatible** - Drop-in replacement
-- **Easy Setup** - 3 lines of code
-- **Session Isolation** - Multi-user support
-- **Production Ready** - Tested and reliable
+- 💾 **Persistent Memory** - Survives restarts
+- 🔗 **LangChain Compatible** - Drop-in replacement
+- 🚀 **Easy Setup** - 3 lines of code
+- 🔒 **Session Isolation** - Multi-user support
+- ✅ **Production Ready** - Tested and reliable
 
 ---
 
@@ -127,7 +135,6 @@ Sign up at [getalchemystai.com](https://getalchemystai.com)
 
 - **Documentation**: https://getalchemystai.com/docs
 - **GitHub**: https://github.com/Alchemyst-ai/alchemyst-langchain
+- **PyPI**: https://pypi.org/project/alchemyst-langchain
 
 ---
-
-Made with ❤️ by Alchemyst AI

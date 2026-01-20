@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "alchemyst-langchain"
 version = "0.1.0"
-description = "Alchemyst's LangChain-style Python utilities"
+description = "Persistent memory integration for LangChain powered by Alchemyst AI"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Alchemyst", email = "saloni@getalchemyst.com" }]
