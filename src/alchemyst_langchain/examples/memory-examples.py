@@ -1,7 +1,7 @@
 import os
 import uuid
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain_openai import ChatOpenAI
 

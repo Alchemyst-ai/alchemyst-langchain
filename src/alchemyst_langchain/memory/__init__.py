@@ -4,7 +4,8 @@ import time
 from typing import Any, Dict, List
 
 from alchemyst_ai import AlchemystAI
-from langchain_core.chat_history import BaseChatMessageHistory as BaseChatMemory
+from langchain_core.chat_history import \
+    BaseChatMessageHistory as BaseChatMemory
 
 
 class AlchemystMemory(BaseChatMemory):
