@@ -32,3 +32,16 @@ dev = [
   "ruff>=0.1.0",            
   "mypy>=1.0"               
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+src = ["src"]
+
+[tool.ruff.lint]
+# Enable Pyflakes (F), Pycodestyle (E, W), and Isort (I)
+select = ["E", "F", "W", "I"]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["alchemyst_langchain"]
