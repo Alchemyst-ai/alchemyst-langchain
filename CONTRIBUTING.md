@@ -83,6 +83,9 @@ ruff format src/ && ruff check --select I --fix src/
 
 # for linting checks run
 ruff check src/
+
+#To confirm everything is correct
+ruff format --check src/ && ruff check src/
 ```
 
 ### 5. Commit Your Changes

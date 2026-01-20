@@ -8,33 +8,26 @@ from langchain_core.chat_history import BaseChatMessageHistory as BaseChatMemory
 
 
 class AlchemystMemory(BaseChatMemory):
-    """Persistent chat memory using Alchemyst AI.
+    """Persistent chat memory using Alchemyst AI..."""
 
-    The memory uses Alchemyst AI's context API to store and retrieve conversation
-    history, organized by session ID for isolation and better organization.
-
-    Args:
-        api_key: Alchemyst AI API key for authentication
-        session_id: Unique identifier for this conversation session.
-                   Acts as a namespace to isolate conversations.
-        **kwargs: Additional arguments passed to BaseChatMemory
-
-    Attributes:
-        memory_variables: List of memory variable names (always ["history"])
-        memory_keys: List of memory keys (always ["history"])
-    """
-
-    def __init__(self, api_key: str, session_id: str, **kwargs: Any) -> None:
+    def __init__(
+        self, api_key: str, session_id: str, org_id: str = "default", **kwargs: Any
+    ) -> None:
         """Initialize AlchemystMemory.
 
         Args:
             api_key: Alchemyst AI API key
             session_id: Unique session identifier
+            org_id: Alchemyst Organization ID
             **kwargs: Additional arguments for BaseChatMemory
         """
-        super().__init__(**kwargs)
         self._session_id = session_id
+        self._org_id = org_id
         self._client = AlchemystAI(api_key=api_key)
+
+        # This call is safe because org_id is now an explicit argument
+        # and is no longer hidden inside **kwargs
+        super().__init__(**kwargs)
 
     @property
     def memory_variables(self) -> List[str]:
@@ -79,7 +72,7 @@ class AlchemystMemory(BaseChatMemory):
             )
 
             # Extract context content
-            contexts = response.contexts if hasattr(response, "contexts") else []
+            contexts = response.contexts if response.contexts is not None else []
             items = [c.content for c in contexts if hasattr(c, "content") and c.content]
 
             return {"history": "\n".join(items)}
@@ -108,7 +101,7 @@ class AlchemystMemory(BaseChatMemory):
         user_input = str(inputs.get("input", ""))
         ai_output = str(outputs.get("output", ""))
 
-        contents = []
+        contents: List[Dict[str, Any]] = []
         timestamp = int(time.time() * 1000)  # milliseconds
 
         # Add user message
@@ -143,7 +136,7 @@ class AlchemystMemory(BaseChatMemory):
         try:
             # Save to Alchemyst memory with session grouping
             self._client.v1.context.memory.add(
-                memory_id=self._session_id,
+                session_id=self._session_id,
                 contents=contents,
                 metadata={
                     "group_name": [self._session_id],
@@ -163,7 +156,9 @@ class AlchemystMemory(BaseChatMemory):
             >>> memory.clear()  # All history for this session is deleted
         """
         try:
-            self._client.v1.context.memory.delete(memory_id=self._session_id)
+            self._client.v1.context.memory.delete(
+                memory_id=self._session_id, organization_id="default"
+            )
         except Exception as error:
             print(f"Error clearing memory: {error}")
 
