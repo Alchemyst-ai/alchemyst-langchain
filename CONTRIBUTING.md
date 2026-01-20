@@ -78,11 +78,10 @@ pytest tests/integration/test_memory.py::TestMemoryBasics
 ### 4. Format and Lint
 
 ```bash
-# Format code (if you have formatters installed)
-black src/
-isort src/
+# To format and sort imports (if you have formatters installed)
+ruff format src/ && ruff check --select I --fix src/
 
-# Check for issues
+# for linting checks run
 ruff check src/
 ```
 
