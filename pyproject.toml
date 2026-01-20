@@ -5,10 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "alchemyst-langchain"
 version = "0.1.0"
-description = "Alchemyst's LangChain-style Python utilities"
+description = "Persistent memory integration for LangChain powered by Alchemyst AI"
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "Alchemyst", email = "" }]
+authors = [{ name = "Alchemyst", email = "anuran@getalchemystai.com" }]
 requires-python = ">=3.10"
 dependencies = [
   "requests>=2.31",
@@ -23,7 +23,25 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
   "pytest>=7.0",
+  "pytest-cov>=4.0",        
   "responses>=0.23",
   "build>=0.10",
-  "twine>=4.0"
+  "twine>=4.0",
+  "black>=23.0",            
+  "isort>=5.0",             
+  "ruff>=0.1.0",            
+  "mypy>=1.0"               
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+src = ["src"]
+
+[tool.ruff.lint]
+# Enable Pyflakes (F), Pycodestyle (E, W), and Isort (I)
+select = ["E", "F", "W", "I"]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["alchemyst_langchain"]
