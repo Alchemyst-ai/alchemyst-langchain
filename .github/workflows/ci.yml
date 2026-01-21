@@ -8,7 +8,7 @@ on:
   release:
     types: [ published ]
 
-jobs:
+jobs: # All jobs must be indented under this key
   test:
     name: Test on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
@@ -16,7 +16,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Strictly quoted to avoid 3.10 -> 3.1 versioning bug
         python-version: ["3.10", "3.11", "3.12"]
     
     steps:
@@ -39,7 +38,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Install explicit testing/env utilities
+        # Added these to ensure the test command works
         pip install pytest-cov python-dotenv
         pip install -e ".[dev]"
     
@@ -48,7 +47,6 @@ jobs:
         ALCHEMYST_AI_API_KEY: ${{ secrets.ALCHEMYST_AI_API_KEY }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
-        # Added -v (verbose) and --cov for coverage reporting
         pytest -v --cov=alchemyst_langchain --cov-report=xml --cov-report=term
     
     - name: Upload coverage to Codecov
@@ -77,7 +75,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install ruff mypy
-        # Install package in editable mode so mypy finds all imports correctly
+        # Install the package so mypy can resolve internal imports
         pip install -e .
     
     - name: Check Format and Lint with Ruff
@@ -87,7 +85,6 @@ jobs:
     
     - name: Type check with mypy
       run: |
-        # Match your local successful run
         mypy src/alchemyst_langchain --ignore-missing-imports
 
   build:
@@ -142,4 +139,5 @@ jobs:
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
+        # If using Trusted Publishing, you don't even need the password secret!
         password: ${{ secrets.PYPI_API_TOKEN }}
