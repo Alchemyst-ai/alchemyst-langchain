@@ -25,7 +25,8 @@ dev = [
   "twine>=4.0",
   "ruff>=0.1.0",
   "mypy>=1.0",
-  "python-semantic-release>=9.0.0"
+  "python-semantic-release>=9.0.0",
+  "python-dotenv"
 ]
 
 [tool.ruff]
