@@ -4,169 +4,180 @@ import time
 from typing import Any, Dict, List
 
 from alchemyst_ai import AlchemystAI
-from langchain_core.chat_history import BaseChatMessageHistory as BaseChatMemory
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 
-class AlchemystMemory(BaseChatMemory):
-    """Persistent chat memory using Alchemyst AI..."""
+class AlchemystMemory(BaseChatMessageHistory):
+    """Persistent chat history powered by Alchemyst AI.
+
+    This class provides persistent conversation memory for LangChain applications
+    using Alchemyst AI's context storage service.
+
+    Args:
+        api_key: Your Alchemyst AI API key
+        session_id: Unique identifier for this conversation session
+        group_name: Optional group name for organizing contexts (defaults to session_id)
+
+    Example:
+        >>> from alchemyst_langchain import AlchemystMemory
+        >>> from langchain.chains import ConversationChain
+        >>> from langchain_openai import ChatOpenAI
+        >>>
+        >>> memory = AlchemystMemory(
+        ...     api_key="your-api-key",
+        ...     session_id="user-123"
+        ... )
+        >>>
+        >>> llm = ChatOpenAI(model="gpt-4o-mini")
+        >>> chain = ConversationChain(llm=llm, memory=memory)
+        >>>
+        >>> response = chain.invoke({"input": "My name is Alice"})
+        >>> # Later...
+        >>> response = chain.invoke({"input": "What's my name?"})
+        >>> # Response: "Your name is Alice"
+    """
 
     def __init__(
-        self, api_key: str, session_id: str, org_id: str = "default", **kwargs: Any
+        self,
+        api_key: str,
+        session_id: str,
+        group_name: str | None = None,
     ) -> None:
         """Initialize AlchemystMemory.
 
         Args:
-            api_key: Alchemyst AI API key
+            api_key: Your Alchemyst AI API key
             session_id: Unique session identifier
-            org_id: Alchemyst Organization ID
-            **kwargs: Additional arguments for BaseChatMemory
+            group_name: Optional group name (defaults to session_id)
         """
-        self._session_id = session_id
-        self._org_id = org_id
-        self._client = AlchemystAI(api_key=api_key)
-
-        # This call is safe because org_id is now an explicit argument
-        # and is no longer hidden inside **kwargs
-        super().__init__(**kwargs)
+        super().__init__()
+        self.client = AlchemystAI(api_key=api_key)
+        self.session_id = session_id
+        self.group_name = group_name or session_id
 
     @property
-    def memory_variables(self) -> List[str]:
-        """Return the list of memory variables.
+    def messages(self) -> List[BaseMessage]:
+        """Retrieve historical messages from Alchemyst.
 
         Returns:
-            List containing ["history"]
+            List of BaseMessage objects (HumanMessage or AIMessage)
         """
-        return ["history"]
+        try:
+            # Search for conversation history in this session
+            response = self.client.v1.context.search(
+                query="conversation history",
+                scope="internal",
+                body_metadata={"group_name": [self.group_name]},
+            )
+
+            messages = []
+            contexts = getattr(response, "contexts", [])
+
+            for context in contexts:
+                content = getattr(context, "content", "")
+                metadata = getattr(context, "metadata", {})
+                role = metadata.get("role", "human")
+
+                if role == "ai":
+                    messages.append(AIMessage(content=content))
+                else:
+                    messages.append(HumanMessage(content=content))
+
+            return messages
+
+        except Exception as e:
+            print(f"Error loading messages: {e}")
+            return []
+
+    def add_message(self, message: BaseMessage) -> None:
+        """Store a message in Alchemyst context.
+
+        Args:
+            message: The message to store (HumanMessage or AIMessage)
+        """
+        role = "ai" if isinstance(message, AIMessage) else "human"
+
+        try:
+            self.client.v1.context.memory.add(
+                session_id=self.session_id,
+                contents=[
+                    {
+                        "content": message.content,
+                        "metadata": {
+                            "role": role,
+                            "session_id": self.session_id,
+                            "type": "text",
+                        },
+                    }
+                ],
+                metadata={"group_name": [self.group_name]},
+            )
+        except Exception as e:
+            print(f"Error adding message: {e}")
+
+    def add_messages(self, messages: List[BaseMessage]) -> None:
+        """Add multiple messages at once.
+
+        Args:
+            messages: List of messages to add
+        """
+        for message in messages:
+            self.add_message(message)
 
     def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Load conversation history from Alchemyst memory.
+        """Load conversation history for LangChain.
 
-        Retrieves relevant conversation context from Alchemyst's memory service
-        based on the current input. Uses semantic search to find the most
-        relevant past messages for this session.
+        Includes retry logic to handle indexing latency.
 
         Args:
-            inputs: Dictionary containing the current input. Expected to have
-                   an "input" key with the user's message.
+            inputs: Dictionary containing current input
 
         Returns:
-            Dictionary with "history" key containing the conversation history
-            as a newline-separated string of past messages.
-
+            Dictionary with "history" key containing formatted conversation
         """
-        try:
-            # Use the input as query if available, otherwise use "conversation"
-            query = (
-                inputs.get("input", "").strip()
-                if inputs.get("input")
-                else "conversation"
-            )
+        # Try up to 3 times to account for indexing latency
+        for attempt in range(3):
+            msgs = self.messages
+            if msgs:
+                history_str = "\n".join(
+                    [
+                        f"{'AI' if isinstance(m, AIMessage) else 'Human'}: {m.content}"
+                        for m in msgs
+                    ]
+                )
+                return {"history": history_str}
 
-            # Search for relevant context in this session
-            response = self._client.v1.context.search(
-                query=query,
-                similarity_threshold=0.0,
-                minimum_similarity_threshold=0.0,
-                scope="internal",
-                body_metadata={"file_type": "text", "group_name": [self._session_id]},
-            )
+            # Wait before retry (but not on last attempt)
+            if attempt < 2:
+                time.sleep(2)
 
-            # Extract context content
-            contexts = response.contexts if response.contexts is not None else []
-            items = [c.content for c in contexts if hasattr(c, "content") and c.content]
-
-            return {"history": "\n".join(items)}
-
-        except Exception as error:
-            print(f"Error loading memory variables: {error}")
-            return {"history": ""}
+        return {"history": ""}
 
     def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, Any]) -> None:
-        """Save conversation context to Alchemyst memory.
-
-        Stores both the user input and AI output in Alchemyst's persistent
-        memory, associated with this session ID.
+        """Save conversation turn to memory.
 
         Args:
-            inputs: Dictionary containing user input with "input" key
-            outputs: Dictionary containing AI output with "output" key
-
-        Example:
-            >>> memory = AlchemystMemory(api_key="...", session_id="session-1")
-            >>> memory.save_context(
-            ...     inputs={"input": "What's the weather?"},
-            ...     outputs={"output": "It's sunny today!"}
-            ... )
+            inputs: Dictionary containing user input
+            outputs: Dictionary containing AI output
         """
-        user_input = str(inputs.get("input", ""))
-        ai_output = str(outputs.get("output", ""))
+        input_str = inputs.get("input", "")
+        output_str = outputs.get("output", "")
 
-        contents: List[Dict[str, Any]] = []
-        timestamp = int(time.time() * 1000)  # milliseconds
-
-        # Add user message
-        if user_input:
-            contents.append(
-                {
-                    "content": user_input,
-                    "metadata": {
-                        "source": self._session_id,
-                        "messageId": str(timestamp),
-                        "type": "text",
-                    },
-                }
-            )
-
-        # Add AI response
-        if ai_output:
-            contents.append(
-                {
-                    "content": ai_output,
-                    "metadata": {
-                        "source": self._session_id,
-                        "messageId": str(timestamp + 1),
-                        "type": "text",
-                    },
-                }
-            )
-
-        if not contents:
-            return
-
-        try:
-            # Save to Alchemyst memory with session grouping
-            self._client.v1.context.memory.add(
-                session_id=self._session_id,
-                contents=contents,
-                metadata={
-                    "group_name": [self._session_id],
-                },
-            )
-        except Exception as error:
-            print(f"Error saving context: {error}")
+        if input_str:
+            self.add_message(HumanMessage(content=input_str))
+        if output_str:
+            self.add_message(AIMessage(content=output_str))
 
     def clear(self) -> None:
         """Clear all memory for this session.
 
-        Deletes all stored conversation history associated with this session_id
-        from Alchemyst's memory service.
-
-        Example:
-            >>> memory = AlchemystMemory(api_key="...", session_id="session-1")
-            >>> memory.clear()  # All history for this session is deleted
+        Deletes all stored conversation history associated with this session_id.
         """
         try:
-            self._client.v1.context.memory.delete(
-                memory_id=self._session_id, organization_id="default"
+            self.client.v1.context.memory.delete(
+                memory_id=self.session_id,
+                organization_id="default",
             )
-        except Exception as error:
-            print(f"Error clearing memory: {error}")
-
-    @property
-    def memory_keys(self) -> List[str]:
-        """Return the memory keys.
-
-        Returns:
-            List containing ["history"]
-        """
-        return ["history"]
+        except Exception as e:
+            print(f"Error clearing memory: {e}")
