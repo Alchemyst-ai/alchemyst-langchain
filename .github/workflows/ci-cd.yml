@@ -70,10 +70,12 @@ jobs:
           mypy src/alchemyst_langchain --ignore-missing-imports
         continue-on-error: true
 
-  build:
-    name: Build Package
+  release:
+    name: Semantic Release & Publish
     needs: [test, lint]
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency: release
     steps:
       - uses: actions/checkout@v4
         with:
@@ -87,43 +89,11 @@ jobs:
         run: |
           pip install build
       
-      - name: Build package
-        run: |
-          python -m build
-      
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-  release:
-    name: Semantic Release & Publish
-    needs: [build]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    concurrency: release
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      
       - name: Python Semantic Release
         id: semantic
         uses: python-semantic-release/python-semantic-release@v9.8.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Download build artifacts
-        if: steps.semantic.outputs.released == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
       
       - name: Publish to PyPI
         if: steps.semantic.outputs.released == 'true'
