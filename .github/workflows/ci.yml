@@ -55,7 +55,7 @@ jobs:
         flags: unittests
         name: codecov-umbrella
 
-lint:
+  lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
     
@@ -71,14 +71,11 @@ lint:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # We only need ruff and mypy now
         pip install ruff mypy
     
     - name: Check Format and Lint with Ruff
       run: |
-        # --check ensures the CI fails if the code isn't formatted correctly
         ruff format --check src/
-        # This checks for logic errors and import sorting
         ruff check src/
     
     - name: Type check with mypy
@@ -126,7 +123,7 @@ lint:
     if: github.event_name == 'release' && github.event.action == 'published'
     
     permissions:
-      id-token: write  # Required for trusted publishing
+      id-token: write
     
     steps:
     - name: Download artifacts
