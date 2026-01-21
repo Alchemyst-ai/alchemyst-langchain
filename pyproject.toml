@@ -43,3 +43,8 @@ version_variables = ["src/alchemyst_langchain/__init__.py:__version__"]
 branch = "main"
 upload_to_release = true
 build_command = "pip install build && python -m build"
+
+[tool.semantic_release.branches.dev]
+match = "dev"
+prerelease = true
+prerelease_token = "dev"
