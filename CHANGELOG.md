@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## v0.1.1 (2026-01-21)
+
+### Fix
+
+* fix: remove separate build job to fix artifact download error ([`df8eb3a`](https://github.com/Alchemyst-ai/alchemyst-langchain/commit/df8eb3a370891754ddac1305a56d2deeb0424650))
+
+* fix: correct CI/CD workflow artifact handling for semantic release ([`a9b6acb`](https://github.com/Alchemyst-ai/alchemyst-langchain/commit/a9b6acb45c84a1bfe25d9442f150ecaf156eadc6))
+
+### Unknown
+
+* Merge branch &#39;dev&#39;
+merge:semantic release fixed ([`c477971`](https://github.com/Alchemyst-ai/alchemyst-langchain/commit/c47797136c1957f92fafcc74cf1d977740aa33aa))
+
+* Tool semantics updated ([`ecce6fc`](https://github.com/Alchemyst-ai/alchemyst-langchain/commit/ecce6fc59f5db0a1a57c6b58ab6147cff4e45c7a))
+
+* Merge branch &#39;main&#39; of https://github.com/Alchemyst-ai/alchemyst-langchain
+merge:sync remote main with dev changes ([`da8a02b`](https://github.com/Alchemyst-ai/alchemyst-langchain/commit/da8a02bd326b8096292d720e04a5e3572de1308c))
+
 ## v0.1.0 (2026-01-21)
 
 ### Ci
