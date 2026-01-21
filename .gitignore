@@ -136,3 +136,13 @@ dmypy.json
 # Local configuration
 *.local
 config.local.*
+
+# PostScript and document files
+*.ps
+*.eps
+langchain
+
+# Large binary files (optional - only if you don't need them in repo)
+*.pdf
+*.zip
+*.tar.gz
